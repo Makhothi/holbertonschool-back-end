@@ -1,34 +1,45 @@
 #!/usr/bin/python3
-"""
-Returns to-do list information for a given employee ID.
+"""Script using API and module requests"""
 
-This script takes an employee ID as a command-line argument and fetches
-the corresponding user information and to-do list from the JSONPlaceholder API.
-It then prints the tasks completed by the employee.
-"""
-
+import csv
 import requests
 import sys
 
 
+def export_tasks_to_csv(USER_ID):
+    """csv"""
+
+    # Define the API endpoints
+    user_url = f"https://jsonplaceholder.typicode.com/users/{USER_ID}"
+    todos_url = f"https://jsonplaceholder.typicode.com/users/{USER_ID}/todos"
+
+    # Fetch user information
+    user_response = requests.get(user_url)
+
+    user_data = user_response.json()
+    USERNAME = user_data['username']
+
+    # Fetch TODOs for the user
+    todos_response = requests.get(todos_url)
+
+    todos_data = todos_response.json()
+
+    # Define CSV file name
+    csv_file_name = f"{USER_ID}.csv"
+
+    # Create and write to CSV
+    with open(csv_file_name, mode='w', newline='') as file:
+        csv_writer = csv.writer(file, quoting=csv.QUOTE_ALL)
+
+        # Write each TASK_COMPLETED_STATUS to the CSV
+        for task in todos_data:
+            TASK_COMPLETED_STATUS = task
+            TASK_TITLE = task
+            csv_writer.writerow([USER_ID, USERNAME,
+                                 TASK_COMPLETED_STATUS['completed'],
+                                 TASK_TITLE['title']])
+
+
 if __name__ == "__main__":
-    # Base URL for the JSONPlaceholder API
-    url = "https://jsonplaceholder.typicode.com/"
-
-    # Get the employee information using the provided employee ID
-    employee_id = sys.argv[1]
-    user = requests.get(url + "users/{}".format(employee_id)).json()
-
-    # Get the to-do list for the employee using the provided employee ID
-    params = {"userId": employee_id}
-    todos = requests.get(url + "todos", params).json()
-
-    # Filter completed tasks and count them
-    completed = [t.get("title") for t in todos if t.get("completed") is True]
-
-    # Print the employee's name and the number of completed tasks
-    print("Employee {} is done with tasks({}/{}):".format(
-        user.get("name"), len(completed), len(todos)))
-
-    # Print the completed tasks one by one with indentation
-    [print("\t {}".format(complete)) for complete in completed]
+    USER_ID = int(sys.argv[1])
+    export_tasks_to_csv(USER_ID)
