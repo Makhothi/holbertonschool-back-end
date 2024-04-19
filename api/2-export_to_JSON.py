@@ -1,43 +1,45 @@
 #!/usr/bin/python3
-"""Script using API and modume requests"""
+"""Script using API and module requests"""
 
 
+import json
 import requests
 import sys
 
 
-def fetch_todo_progress(employee_id):
-    """script API TODO list"""
+def export_tasks_to_json(USER_ID):
+    """json format"""
 
-    employee_id = int(sys.argv[1])
-    # Endpoint URLs
-    user_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-    todos_url = f"https://jsonplaceholder.typicode.com/users/\
-{employee_id}/todos"
+    # API endpoints
+    user_url = f"https://jsonplaceholder.typicode.com/users/{USER_ID}"
+    todos_url = f"https://jsonplaceholder.typicode.com/\
+todos?userId={USER_ID}"
 
     # Fetch user information
     user_response = requests.get(user_url)
 
     user_data = user_response.json()
-    EMPLOYEE_NAME = user_data['name']
+    USERNAME = user_data['username']
 
-    # Fetch TODOs for the user
+    # Fetch tasks for the user
     todos_response = requests.get(todos_url)
+
     todos_data = todos_response.json()
 
-    # Calculate progress
-    TOTAL_NUMBER_OF_TASKS = len(todos_data)
-    NUMBER_OF_DONE_TASKS = sum(1 for TASK_TITLE in
-                               todos_data if TASK_TITLE['completed'])
+    # Prepare data for JSON format
+    tasks_info = []
+    for task in todos_data:
+        tasks_info.append({"task": task['title'], "completed":
+                           task['completed'], "username": USERNAME})
 
-    # Print progress
-    print(f"Employee {EMPLOYEE_NAME} is done with tasks\
-({NUMBER_OF_DONE_TASKS}/{TOTAL_NUMBER_OF_TASKS}):")
-    for TASK_TITLE in todos_data:
-        if TASK_TITLE['completed']:
-            print(f"\t {TASK_TITLE['title']}")
+    # Create JSON structure
+    json_output = {USER_ID: tasks_info}
+
+    # Write data to JSON file
+    with open(f"{USER_ID}.json", 'w') as json_file:
+        json.dump(json_output, json_file)
 
 
 if __name__ == "__main__":
-    employee_id = int(sys.argv[1])
-    fetch_todo_progress(employee_id)
+    USER_ID = int(sys.argv[1])
+    export_tasks_to_json(USER_ID)
