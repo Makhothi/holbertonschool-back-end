@@ -1,43 +1,43 @@
 #!/usr/bin/python3
-"""
-Exports to-do list information for a given employee ID to JSON format.
+"""Script using API and modume requests"""
 
-This script takes an employee ID as a command-line argument and exports
-the corresponding user information and to-do list to a JSON file.
-"""
 
-import json
 import requests
 import sys
 
 
+def fetch_todo_progress(employee_id):
+    """script API TODO list"""
+
+    employee_id = int(sys.argv[1])
+    # Endpoint URLs
+    user_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
+    todos_url = f"https://jsonplaceholder.typicode.com/users/\
+{employee_id}/todos"
+
+    # Fetch user information
+    user_response = requests.get(user_url)
+
+    user_data = user_response.json()
+    EMPLOYEE_NAME = user_data['name']
+
+    # Fetch TODOs for the user
+    todos_response = requests.get(todos_url)
+    todos_data = todos_response.json()
+
+    # Calculate progress
+    TOTAL_NUMBER_OF_TASKS = len(todos_data)
+    NUMBER_OF_DONE_TASKS = sum(1 for TASK_TITLE in
+                               todos_data if TASK_TITLE['completed'])
+
+    # Print progress
+    print(f"Employee {EMPLOYEE_NAME} is done with tasks\
+({NUMBER_OF_DONE_TASKS}/{TOTAL_NUMBER_OF_TASKS}):")
+    for TASK_TITLE in todos_data:
+        if TASK_TITLE['completed']:
+            print(f"\t {TASK_TITLE['title']}")
+
+
 if __name__ == "__main__":
-    # Get the employee ID from the command-line argument
-    user_id = sys.argv[1]
-
-    # Base URL for the JSONPlaceholder API
-    url = "https://jsonplaceholder.typicode.com/"
-
-    # Fetch user information using the provided employee ID
-    user = requests.get(url + "users/{}".format(user_id)).json()
-    username = user.get("username")
-
-    # Fetch the to-do list for the employee using the provided employee ID
-    params = {"userId": user_id}
-    todos = requests.get(url + "todos", params).json()
-
-    # Create a dictionary containing the user and to-do list information
-    data_to_export = {
-        user_id: [
-            {
-                "task": t.get("title"),
-                "completed": t.get("completed"),
-                "username": username
-            }
-            for t in todos
-        ]
-    }
-
-    # Write the data to a JSON file with the employee ID as the filename
-    with open("{}.json".format(user_id), "w") as jsonfile:
-        json.dump(data_to_export, jsonfile, indent=4)
+    employee_id = int(sys.argv[1])
+    fetch_todo_progress(employee_id)
